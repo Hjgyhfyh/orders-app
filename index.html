@@ -1,0 +1,798 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+<meta name="theme-color" content="#000000" />
+<meta name="color-scheme" content="dark" />
+<title>Скрипты и разработка на заказ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;600;700;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<style>
+  :root{
+    --bg:#000000;
+    --fg:#ffffff;
+    --muted:#8a8a8a;
+    --muted-2:#6a6a6a;
+    --line:rgba(255,255,255,.10);
+    --line-strong:rgba(255,255,255,.18);
+    --card:rgba(255,255,255,.035);
+    --card-hover:rgba(255,255,255,.06);
+    --glass-border:rgba(255,255,255,.09);
+    --radius:22px;
+    --radius-sm:14px;
+    --ease:cubic-bezier(.22,.61,.36,1);
+    --maxw:640px;
+    --safe-b:env(safe-area-inset-bottom,0px);
+  }
+
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;padding:0;}
+  html{-webkit-text-size-adjust:100%;}
+  body{
+    background:var(--bg);
+    color:var(--fg);
+    font-family:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+    font-size:16px;
+    line-height:1.55;
+    letter-spacing:.01em;
+    -webkit-font-smoothing:antialiased;
+    text-rendering:optimizeLegibility;
+    overflow-x:hidden;
+    min-height:100vh;
+    position:relative;
+  }
+
+  /* film grain / noise overlay */
+  body::before{
+    content:"";
+    position:fixed;
+    inset:0;
+    z-index:9999;
+    pointer-events:none;
+    opacity:.045;
+    mix-blend-mode:screen;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+  /* subtle top glow */
+  body::after{
+    content:"";
+    position:fixed;
+    top:-40%;
+    left:50%;
+    transform:translateX(-50%);
+    width:120vw;
+    height:70vh;
+    z-index:-1;
+    pointer-events:none;
+    background:radial-gradient(ellipse at center,rgba(255,255,255,.08),rgba(255,255,255,0) 62%);
+  }
+
+  .wrap{
+    max-width:var(--maxw);
+    margin:0 auto;
+    padding:0 22px calc(120px + var(--safe-b));
+  }
+
+  /* ---------- reveal ---------- */
+  .reveal{
+    opacity:0;
+    transform:translateY(26px);
+    transition:opacity .9s var(--ease),transform .9s var(--ease);
+    will-change:opacity,transform;
+  }
+  .reveal.in{opacity:1;transform:none;}
+  @media (prefers-reduced-motion:reduce){
+    .reveal{opacity:1!important;transform:none!important;transition:none!important;}
+  }
+
+  /* ---------- hero ---------- */
+  .hero{
+    padding:clamp(64px,14vh,120px) 0 46px;
+    text-align:left;
+  }
+  .badge{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    font-size:12.5px;
+    font-weight:600;
+    letter-spacing:.04em;
+    text-transform:uppercase;
+    color:var(--fg);
+    padding:8px 14px;
+    border:1px solid var(--line-strong);
+    border-radius:100px;
+    background:rgba(255,255,255,.04);
+    backdrop-filter:blur(8px);
+    -webkit-backdrop-filter:blur(8px);
+    margin-bottom:26px;
+  }
+  .badge .dot{
+    width:6px;height:6px;border-radius:50%;
+    background:#fff;
+    box-shadow:0 0 0 0 rgba(255,255,255,.7);
+    animation:pulse 2.2s infinite;
+  }
+  @keyframes pulse{
+    0%{box-shadow:0 0 0 0 rgba(255,255,255,.55);}
+    70%{box-shadow:0 0 0 9px rgba(255,255,255,0);}
+    100%{box-shadow:0 0 0 0 rgba(255,255,255,0);}
+  }
+  h1{
+    font-family:"Unbounded",sans-serif;
+    font-weight:800;
+    font-size:clamp(40px,10.5vw,68px);
+    line-height:1.02;
+    letter-spacing:-.02em;
+    margin:0 0 20px;
+    text-wrap:balance;
+  }
+  .hero p.sub{
+    font-size:clamp(16px,4.3vw,20px);
+    color:var(--muted);
+    max-width:30ch;
+    margin:0;
+    line-height:1.5;
+  }
+  .hero p.sub b{color:var(--fg);font-weight:600;}
+
+  /* ---------- section heading ---------- */
+  .sec{padding:40px 0 8px;}
+  .sec-eyebrow{
+    font-size:12px;
+    font-weight:600;
+    letter-spacing:.16em;
+    text-transform:uppercase;
+    color:var(--muted-2);
+    display:flex;
+    align-items:center;
+    gap:12px;
+    margin:0 0 22px;
+  }
+  .sec-eyebrow::after{
+    content:"";
+    flex:1;
+    height:1px;
+    background:var(--line);
+  }
+  h2{
+    font-family:"Unbounded",sans-serif;
+    font-weight:700;
+    font-size:clamp(26px,7vw,38px);
+    line-height:1.08;
+    letter-spacing:-.015em;
+    margin:0 0 26px;
+  }
+
+  /* ---------- services ---------- */
+  .services{display:grid;gap:12px;}
+  .svc{
+    position:relative;
+    display:flex;
+    align-items:center;
+    gap:16px;
+    padding:18px 18px;
+    border:1px solid var(--glass-border);
+    border-radius:var(--radius);
+    background:var(--card);
+    backdrop-filter:blur(14px);
+    -webkit-backdrop-filter:blur(14px);
+    cursor:pointer;
+    transition:transform .35s var(--ease),background .35s var(--ease),border-color .35s var(--ease);
+    overflow:hidden;
+  }
+  .svc::after{
+    content:"";
+    position:absolute;
+    inset:0;
+    border-radius:inherit;
+    padding:1px;
+    background:linear-gradient(135deg,rgba(255,255,255,.28),rgba(255,255,255,0) 45%);
+    -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);
+    -webkit-mask-composite:xor;
+    mask-composite:exclude;
+    opacity:0;
+    transition:opacity .35s var(--ease);
+    pointer-events:none;
+  }
+  .svc:hover,.svc.sel{background:var(--card-hover);border-color:var(--line-strong);}
+  .svc:active{transform:scale(.985);}
+  .svc.sel::after{opacity:1;}
+  .svc .ico{
+    flex:none;
+    width:46px;height:46px;
+    display:grid;place-items:center;
+    font-size:23px;
+    border-radius:13px;
+    background:rgba(255,255,255,.05);
+    border:1px solid var(--line);
+    filter:grayscale(1);
+  }
+  .svc .body{flex:1;min-width:0;}
+  .svc .t{
+    font-family:"Inter",sans-serif;
+    font-weight:600;
+    font-size:16.5px;
+    letter-spacing:-.01em;
+    margin:0 0 3px;
+  }
+  .svc .d{
+    font-size:13px;
+    color:var(--muted);
+    margin:0;
+    line-height:1.4;
+  }
+  .svc .price{
+    flex:none;
+    font-family:"Unbounded",sans-serif;
+    font-weight:600;
+    font-size:14px;
+    white-space:nowrap;
+    align-self:flex-start;
+    padding-top:2px;
+    color:var(--fg);
+  }
+  .svc .price small{
+    display:block;
+    font-family:"Inter",sans-serif;
+    font-weight:500;
+    font-size:10px;
+    letter-spacing:.06em;
+    text-transform:uppercase;
+    color:var(--muted-2);
+    text-align:right;
+  }
+  .svc .check{
+    position:absolute;
+    top:14px;right:14px;
+    width:20px;height:20px;
+    opacity:0;
+    transform:scale(.5);
+    transition:opacity .3s var(--ease),transform .3s var(--ease);
+  }
+  .svc.sel .check{opacity:1;transform:none;}
+  .svc.sel .price{display:none;}
+
+  /* ---------- steps ---------- */
+  .steps{display:grid;gap:0;}
+  .step{
+    display:flex;
+    gap:20px;
+    padding:24px 0;
+    border-bottom:1px solid var(--line);
+  }
+  .step:last-child{border-bottom:0;}
+  .step .num{
+    font-family:"Unbounded",sans-serif;
+    font-weight:800;
+    font-size:clamp(30px,9vw,46px);
+    line-height:.9;
+    color:transparent;
+    -webkit-text-stroke:1.2px rgba(255,255,255,.34);
+    flex:none;
+    width:1.6em;
+  }
+  .step .st-b{flex:1;padding-top:4px;}
+  .step h3{
+    font-family:"Inter",sans-serif;
+    font-weight:600;
+    font-size:18px;
+    margin:0 0 6px;
+    letter-spacing:-.01em;
+  }
+  .step p{margin:0;font-size:14.5px;color:var(--muted);line-height:1.5;}
+  .accent-note{
+    margin-top:22px;
+    padding:16px 18px;
+    border:1px solid var(--line-strong);
+    border-radius:var(--radius-sm);
+    background:rgba(255,255,255,.04);
+    font-size:14px;
+    font-weight:500;
+    color:var(--fg);
+    display:flex;
+    gap:11px;
+    align-items:center;
+  }
+  .accent-note svg{flex:none;}
+
+  /* ---------- honesty ---------- */
+  .honest{
+    border:1px solid var(--glass-border);
+    border-radius:var(--radius);
+    background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,.015));
+    backdrop-filter:blur(14px);
+    -webkit-backdrop-filter:blur(14px);
+    padding:26px 24px;
+  }
+  .honest .h-head{
+    display:flex;align-items:center;gap:12px;
+    font-family:"Unbounded",sans-serif;
+    font-weight:700;
+    font-size:19px;
+    letter-spacing:-.01em;
+    margin:0 0 16px;
+  }
+  .honest .h-head .x{
+    width:30px;height:30px;flex:none;
+    display:grid;place-items:center;
+    border-radius:9px;
+    border:1px solid var(--line-strong);
+    background:rgba(255,255,255,.04);
+  }
+  .honest ul{list-style:none;margin:0 0 16px;padding:0;display:grid;gap:11px;}
+  .honest li{
+    position:relative;
+    padding-left:26px;
+    font-size:14.5px;
+    color:var(--muted);
+    line-height:1.5;
+  }
+  .honest li b{color:var(--fg);font-weight:600;}
+  .honest li::before{
+    content:"";
+    position:absolute;
+    left:2px;top:.62em;
+    width:12px;height:1.5px;
+    background:rgba(255,255,255,.5);
+  }
+  .honest .h-foot{
+    font-size:14.5px;
+    color:var(--fg);
+    padding-top:16px;
+    border-top:1px solid var(--line);
+    line-height:1.55;
+  }
+  .honest .h-foot b{font-weight:600;}
+
+  /* ---------- form ---------- */
+  .form-card{
+    border:1px solid var(--glass-border);
+    border-radius:var(--radius);
+    background:var(--card);
+    backdrop-filter:blur(16px);
+    -webkit-backdrop-filter:blur(16px);
+    padding:26px 22px;
+  }
+  .field{margin-bottom:24px;}
+  .field:last-of-type{margin-bottom:8px;}
+  .label{
+    display:block;
+    font-size:12.5px;
+    font-weight:600;
+    letter-spacing:.05em;
+    text-transform:uppercase;
+    color:var(--muted);
+    margin:0 0 12px;
+  }
+  .label .req{color:var(--fg);}
+  .chips{display:flex;flex-wrap:wrap;gap:9px;}
+  .chip{
+    font-family:"Inter",sans-serif;
+    font-size:14px;
+    font-weight:500;
+    color:var(--muted);
+    padding:10px 15px;
+    border:1px solid var(--line-strong);
+    border-radius:100px;
+    background:transparent;
+    cursor:pointer;
+    transition:all .28s var(--ease);
+    white-space:nowrap;
+    user-select:none;
+  }
+  .chip:hover{color:var(--fg);border-color:rgba(255,255,255,.32);}
+  .chip:active{transform:scale(.94);}
+  .chip.on{
+    background:#fff;
+    color:#000;
+    border-color:#fff;
+    font-weight:600;
+  }
+  input[type="text"],textarea{
+    width:100%;
+    font-family:"Inter",sans-serif;
+    font-size:16px;
+    color:var(--fg);
+    background:rgba(255,255,255,.03);
+    border:1px solid var(--line-strong);
+    border-radius:var(--radius-sm);
+    padding:14px 16px;
+    outline:none;
+    resize:none;
+    transition:border-color .28s var(--ease),background .28s var(--ease);
+    -webkit-appearance:none;
+  }
+  input[type="text"]::placeholder,textarea::placeholder{color:var(--muted-2);}
+  input[type="text"]:focus,textarea:focus{
+    border-color:rgba(255,255,255,.5);
+    background:rgba(255,255,255,.05);
+  }
+  textarea{min-height:110px;line-height:1.5;}
+
+  .submit{
+    width:100%;
+    margin-top:20px;
+    font-family:"Unbounded",sans-serif;
+    font-weight:700;
+    font-size:15px;
+    letter-spacing:.03em;
+    color:#000;
+    background:#fff;
+    border:none;
+    border-radius:var(--radius-sm);
+    padding:18px;
+    cursor:pointer;
+    transition:transform .25s var(--ease),opacity .25s var(--ease),box-shadow .25s var(--ease);
+    box-shadow:0 0 0 rgba(255,255,255,0);
+  }
+  .submit:hover{box-shadow:0 8px 40px rgba(255,255,255,.14);}
+  .submit:active{transform:scale(.975);}
+  .submit:disabled{opacity:.4;cursor:default;box-shadow:none;transform:none;}
+
+  .hint{
+    margin-top:14px;
+    font-size:13px;
+    color:var(--muted);
+    text-align:center;
+    line-height:1.5;
+    min-height:1em;
+    transition:color .3s var(--ease);
+  }
+  .hint.show-ok{color:var(--fg);}
+
+  /* ---------- footer ---------- */
+  footer{
+    margin-top:56px;
+    padding-top:34px;
+    border-top:1px solid var(--line);
+    text-align:center;
+  }
+  footer .f-lead{
+    font-size:13px;
+    letter-spacing:.05em;
+    text-transform:uppercase;
+    color:var(--muted-2);
+    margin:0 0 10px;
+  }
+  footer a.tg{
+    font-family:"Unbounded",sans-serif;
+    font-weight:700;
+    font-size:clamp(22px,6vw,30px);
+    color:var(--fg);
+    text-decoration:none;
+    letter-spacing:-.01em;
+    display:inline-block;
+    transition:opacity .25s var(--ease),transform .25s var(--ease);
+  }
+  footer a.tg:hover{opacity:.7;}
+  footer a.tg:active{transform:scale(.97);}
+  footer .f-sub{
+    margin:18px 0 0;
+    font-size:12px;
+    color:var(--muted-2);
+  }
+</style>
+</head>
+<body>
+<main class="wrap">
+
+  <!-- HERO -->
+  <section class="hero reveal">
+    <span class="badge"><span class="dot"></span>⚡ отвечаю в течение часа</span>
+    <h1>Скрипты и&nbsp;разработка на&nbsp;заказ</h1>
+    <p class="sub">Просто опиши задачу — <b>сделаю быстро</b>. Сначала демо, потом оплата.</p>
+  </section>
+
+  <!-- SERVICES -->
+  <section class="sec">
+    <p class="sec-eyebrow reveal">Услуги и цены</p>
+    <div class="services" id="services"></div>
+  </section>
+
+  <!-- HOW IT WORKS -->
+  <section class="sec">
+    <p class="sec-eyebrow reveal">Как это работает</p>
+    <h2 class="reveal">Три шага до&nbsp;результата</h2>
+    <div class="steps">
+      <div class="step reveal">
+        <div class="num">01</div>
+        <div class="st-b">
+          <h3>Опиши задачу</h3>
+          <p>Расскажи, что нужно — игра, тема, что должно делать. Даже парой фраз.</p>
+        </div>
+      </div>
+      <div class="step reveal">
+        <div class="num">02</div>
+        <div class="st-b">
+          <h3>Получи цену и видео-демо</h3>
+          <p>Назову цену и покажу видео уже готовой работы — ты видишь результат заранее.</p>
+        </div>
+      </div>
+      <div class="step reveal">
+        <div class="num">03</div>
+        <div class="st-b">
+          <h3>Оплати и забери</h3>
+          <p>Оплата переводом — и файл твой. Всё честно и без предоплаты вслепую.</p>
+        </div>
+      </div>
+    </div>
+    <div class="accent-note reveal">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17l-5-5" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <span>Оплата <b>только после демо</b>. Не понравилось — не платишь.</span>
+    </div>
+  </section>
+
+  <!-- HONESTY -->
+  <section class="sec">
+    <p class="sec-eyebrow reveal">Честно о Roblox</p>
+    <div class="honest reveal">
+      <div class="h-head">
+        <span class="x">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M18 6L6 18M6 6l12 12" stroke="#fff" stroke-width="2.2" stroke-linecap="round"/></svg>
+        </span>
+        Чего я не делаю
+      </div>
+      <ul>
+        <li><b>Выдачу робуксов</b> — так это не работает, схем нет.</li>
+        <li><b>Взлом аккаунтов</b> — не берусь, это невозможно и незаконно.</li>
+        <li><b>Обход античита топ-игр</b> — там серверная защита, обойти её нельзя.</li>
+      </ul>
+      <div class="h-foot">
+        Кто обещает такое — <b>обманывает</b>. Если твоя идея нереальна, я скажу сразу и предложу то, что <b>реально сделать</b>.
+      </div>
+    </div>
+  </section>
+
+  <!-- FORM -->
+  <section class="sec">
+    <p class="sec-eyebrow reveal">Оставить заявку</p>
+    <h2 class="reveal">Расскажи о задаче</h2>
+    <div class="form-card reveal">
+
+      <div class="field">
+        <label class="label">Услуга</label>
+        <div class="chips" id="serviceChips"></div>
+      </div>
+
+      <div class="field">
+        <label class="label" for="game">Игра / тема</label>
+        <input type="text" id="game" placeholder="например: Grow a Garden" autocomplete="off" />
+      </div>
+
+      <div class="field">
+        <label class="label" for="brief">Что нужно сделать <span class="req">*</span></label>
+        <textarea id="brief" placeholder="Опиши задачу своими словами: что должно работать, какие фичи, детали…"></textarea>
+      </div>
+
+      <div class="field">
+        <label class="label">Бюджет</label>
+        <div class="chips" id="budgetChips"></div>
+      </div>
+
+      <button class="submit" id="submitBtn">Отправить заявку</button>
+      <p class="hint" id="hint"></p>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer class="reveal">
+    <p class="f-lead">Связь напрямую</p>
+    <a class="tg" href="https://t.me/sigmatik323" target="_blank" rel="noopener">@sigmatik323</a>
+    <p class="f-sub">Отвечаю лично · без ботов и автоответов</p>
+  </footer>
+
+</main>
+
+<script>
+(function(){
+  "use strict";
+
+  // ---------- Telegram bootstrap ----------
+  var tg = (window.Telegram && window.Telegram.WebApp) ? window.Telegram.WebApp : null;
+  var BOT = "teststsbbot";
+  if(tg){
+    try{ tg.ready(); }catch(e){}
+    try{ tg.expand(); }catch(e){}
+    // force black regardless of theme
+    try{ tg.setBackgroundColor("#000000"); }catch(e){}
+    try{ tg.setHeaderColor("#000000"); }catch(e){}
+    try{ if(tg.enableClosingConfirmation) {} }catch(e){}
+  }
+  function haptic(kind){
+    try{
+      if(tg && tg.HapticFeedback){
+        if(kind==="sel") tg.HapticFeedback.selectionChanged();
+        else if(kind==="ok") tg.HapticFeedback.notificationOccurred("success");
+        else if(kind==="err") tg.HapticFeedback.notificationOccurred("error");
+        else tg.HapticFeedback.impactOccurred("light");
+      }
+    }catch(e){}
+  }
+
+  // ---------- data ----------
+  var SERVICES = [
+    {id:"roblox", icon:"🎮", title:"Roblox-скрипт", price:"от 300₽", desc:"Автофарм, авто-сбор, GUI, телепорты, анти-афк — почти под любую игру"},
+    {id:"bot", icon:"🤖", title:"Telegram-бот", price:"от 500₽", desc:"Боты любой сложности: заявки, магазины, автоматизация"},
+    {id:"site", icon:"🌐", title:"Сайт / лендинг", price:"от 800₽", desc:"Быстрые аккуратные страницы под задачу"},
+    {id:"parser", icon:"⚙️", title:"Парсер", price:"от 500₽", desc:"Сбор данных с сайтов, выгрузка в нужный формат"},
+    {id:"deck", icon:"📊", title:"Презентация", price:"от 800₽", desc:"Аккуратные слайды под выступление или проект"},
+    {id:"app", icon:"📱", title:"Приложение", price:"от 1000₽", desc:"Небольшие приложения и утилиты под запрос"}
+  ];
+  var BUDGETS = ["300–500 ₽","500–1000 ₽","1000–3000 ₽","3000+ ₽","Не знаю"];
+
+  var state = { service:null, budget:null };
+
+  // ---------- render service cards ----------
+  var checkSVG = '<svg class="check" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="11" fill="#fff"/><path d="M17 8.5l-6.4 7L7 12" stroke="#000" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  var svcWrap = document.getElementById("services");
+  SERVICES.forEach(function(s){
+    var el = document.createElement("div");
+    el.className = "svc reveal";
+    el.setAttribute("data-id", s.id);
+    el.innerHTML =
+      '<span class="ico">'+s.icon+'</span>'+
+      '<div class="body"><p class="t">'+s.title+'</p><p class="d">'+s.desc+'</p></div>'+
+      '<span class="price">'+s.price+'<small>цена от</small></span>'+
+      checkSVG;
+    el.addEventListener("click", function(){
+      selectService(s.id, true);
+      haptic("sel");
+      var form = document.getElementById("serviceChips");
+      if(form){
+        var top = form.getBoundingClientRect().top + window.pageYOffset - 90;
+        window.scrollTo({top:top, behavior:"smooth"});
+      }
+    });
+    svcWrap.appendChild(el);
+  });
+
+  // ---------- render service chips ----------
+  var chipWrap = document.getElementById("serviceChips");
+  SERVICES.forEach(function(s){
+    var c = document.createElement("button");
+    c.type = "button";
+    c.className = "chip";
+    c.setAttribute("data-id", s.id);
+    c.textContent = s.icon + " " + s.title;
+    c.addEventListener("click", function(){ selectService(s.id, false); haptic("sel"); });
+    chipWrap.appendChild(c);
+  });
+
+  // ---------- render budget chips ----------
+  var budWrap = document.getElementById("budgetChips");
+  BUDGETS.forEach(function(b){
+    var c = document.createElement("button");
+    c.type = "button";
+    c.className = "chip";
+    c.setAttribute("data-b", b);
+    c.textContent = b;
+    c.addEventListener("click", function(){
+      state.budget = (state.budget===b) ? null : b;
+      [].forEach.call(budWrap.children, function(ch){
+        ch.classList.toggle("on", ch.getAttribute("data-b")===state.budget);
+      });
+      haptic("sel");
+    });
+    budWrap.appendChild(c);
+  });
+
+  // ---------- selection ----------
+  function selectService(id, fromCard){
+    state.service = id;
+    [].forEach.call(document.querySelectorAll(".svc"), function(el){
+      el.classList.toggle("sel", el.getAttribute("data-id")===id);
+    });
+    [].forEach.call(chipWrap.children, function(ch){
+      ch.classList.toggle("on", ch.getAttribute("data-id")===id);
+    });
+  }
+
+  // ---------- reveal on scroll ----------
+  var io;
+  if("IntersectionObserver" in window){
+    io = new IntersectionObserver(function(entries){
+      entries.forEach(function(en){
+        if(en.isIntersecting){ en.target.classList.add("in"); io.unobserve(en.target); }
+      });
+    },{threshold:.12, rootMargin:"0px 0px -8% 0px"});
+    [].forEach.call(document.querySelectorAll(".reveal"), function(el){ io.observe(el); });
+  }else{
+    [].forEach.call(document.querySelectorAll(".reveal"), function(el){ el.classList.add("in"); });
+  }
+
+  // ---------- submit ----------
+  var hint = document.getElementById("hint");
+  function setHint(msg, ok){
+    hint.textContent = msg || "";
+    hint.classList.toggle("show-ok", !!ok);
+  }
+
+  function serviceTitle(id){
+    for(var i=0;i<SERVICES.length;i++){ if(SERVICES[i].id===id) return SERVICES[i].title; }
+    return id || "";
+  }
+
+  function doSubmit(){
+    var brief = (document.getElementById("brief").value || "").trim();
+    var game  = (document.getElementById("game").value || "").trim();
+
+    if(!brief){
+      setHint("Опиши, что нужно сделать — хотя бы в двух словах.", false);
+      haptic("err");
+      var ta = document.getElementById("brief");
+      ta.focus();
+      ta.style.borderColor = "rgba(255,255,255,.7)";
+      setTimeout(function(){ ta.style.borderColor=""; }, 1200);
+      return;
+    }
+
+    var payload = {
+      service: state.service || "",
+      game: game,
+      brief: brief,
+      budget: state.budget || ""
+    };
+
+    // Path A: opened from a reply/keyboard button → sendData works
+    var canSendData = false;
+    if(tg && typeof tg.sendData === "function"){
+      // sendData only delivers when launched from a reply keyboard button.
+      // initDataUnsafe has no query_id in that mode; presence of query_id means
+      // inline/menu launch where sendData silently no-ops.
+      var q = (tg.initDataUnsafe && tg.initDataUnsafe.query_id) || null;
+      canSendData = !q; // no query_id → likely reply-keyboard context
+    }
+
+    haptic("ok");
+
+    if(tg && canSendData){
+      try{
+        tg.sendData(JSON.stringify(payload));
+        setHint("Заявка отправлена ✓", true);
+        setTimeout(function(){ try{ tg.close(); }catch(e){} }, 400);
+        return;
+      }catch(e){ /* fall through to link */ }
+    }
+
+    // Path B: fallback → open bot chat with deep-link start param
+    var startParam = "app_" + (state.service || "order");
+    var link = "https://t.me/" + BOT + "?start=" + startParam;
+    setHint("Открылся чат — отправь туда описание задачи 👇", true);
+
+    if(tg && typeof tg.openTelegramLink === "function"){
+      try{
+        tg.openTelegramLink(link);
+        setTimeout(function(){ try{ tg.close(); }catch(e){} }, 900);
+        return;
+      }catch(e){ /* fall through */ }
+    }
+    // Pure browser (no Telegram API)
+    window.open(link, "_blank");
+  }
+
+  document.getElementById("submitBtn").addEventListener("click", doSubmit);
+
+  // ---------- Telegram MainButton ----------
+  if(tg && tg.MainButton){
+    try{
+      tg.MainButton.setParams({
+        text: "ОТПРАВИТЬ ЗАЯВКУ",
+        color: "#ffffff",
+        text_color: "#000000",
+        is_active: true,
+        is_visible: true
+      });
+    }catch(e){
+      try{ tg.MainButton.setText("ОТПРАВИТЬ ЗАЯВКУ"); tg.MainButton.show(); }catch(e2){}
+    }
+    try{ tg.MainButton.onClick(doSubmit); }catch(e){}
+  }
+
+})();
+</script>
+</body>
+</html>
